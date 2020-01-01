@@ -47,5 +47,8 @@ jobs:
       - name: Terraform Validate
         run: .github/scripts/terraform_validate.sh
 
+      - name: Terraform Plan
+        run: .github/scripts/terraform_plan.sh
+
       - name: Terraform Apply
         run: .github/scripts/terraform_apply.sh
