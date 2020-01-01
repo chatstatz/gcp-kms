@@ -23,7 +23,7 @@ resource "google_kms_crypto_key" "chatstatz_control_tfstate_key" {
     project    = "chatstatz-control"
     repository = local.repository
     stage      = "control"
-    slice      = "master"
+    slice      = var.slice
     region     = "global"
     managed-by = "terraform"
   }

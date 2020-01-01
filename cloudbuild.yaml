@@ -1,8 +1,0 @@
-substitutions:
-  _TERRAFORM_VERSION: '0.12.18'
-  _TERRAFORM_DIR: terraform
-
-steps:
-  - id: 'terraform fmt'
-    name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
-    args: [ 'fmt', '-recursive', '${_TERRAFORM_DIR}']

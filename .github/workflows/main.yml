@@ -1,0 +1,51 @@
+name: CI/CD Pipeline
+
+on:
+  - push
+
+env:
+  REPOSITORY: gcp-kms
+  TERRAFORM_DIR: terraform
+  TERRAFORM_VERSION: 0.12.18
+  TERRAFORM_STATE_BUCKET: chatstatz-control-tfstate
+
+jobs:
+  lint:
+    name: Lint terraform templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Terraform Format
+        run: .github/scripts/terraform_fmt.sh
+
+  deploy:
+    name: Deploy master branch
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs: [ lint ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Install gcloud SDK
+        run: |
+          curl https://sdk.cloud.google.com > install.sh
+          bash install.sh --disable-prompts
+
+      - name: Activate Service Account
+        run: |
+          echo "$GCLOUD_AUTH" | base64 --decode > "${PWD}/gcloud.json"
+          sh -c "gcloud auth activate-service-account --key-file=${PWD}/gcloud.json"
+        env:
+          GCLOUD_AUTH: ${{ secrets.GCP_CONTROL_DEPLOYER_SA_KEY }}
+
+      - name: Terraform Init
+        run: .github/scripts/terraform_init.sh
+
+      - name: Terraform Validate
+        run: .github/scripts/terraform_validate.sh
+
+      - name: Terraform Apply
+        run: .github/scripts/terraform_apply.sh
