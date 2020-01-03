@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Workflow
 
 on:
   - push
@@ -10,21 +10,9 @@ env:
   TERRAFORM_STATE_BUCKET: chatstatz-control-tfstate
 
 jobs:
-  lint:
-    name: Lint terraform templates
+  ci_cd:
+    name: CI/CD
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@master
-
-      - name: Terraform Format
-        run: .github/scripts/terraform_fmt.sh
-
-  deploy:
-    name: Deploy master branch
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    needs: [ lint ]
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -41,14 +29,22 @@ jobs:
         env:
           GCLOUD_AUTH: ${{ secrets.GCP_CONTROL_DEPLOYER_SA_KEY }}
 
+      - name: Terraform Format
+        run: .github/scripts/terraform_fmt.sh
+
       - name: Terraform Init
         run: .github/scripts/terraform_init.sh
+        env:
+          SLICE: master # masquerade as 'master' for the purpose of validating changes
 
       - name: Terraform Validate
         run: .github/scripts/terraform_validate.sh
 
       - name: Terraform Plan
         run: .github/scripts/terraform_plan.sh
+        env:
+          SLICE: master # masquerade as 'master' for the purpose of validating changes
 
       - name: Terraform Apply
+        if: github.ref == 'refs/heads/master'
         run: .github/scripts/terraform_apply.sh
